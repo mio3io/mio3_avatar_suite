@@ -9,11 +9,10 @@ from bpy.props import (
     CollectionProperty,
 )
 from bpy.types import Operator, Panel, PropertyGroup
-from bpy.app.translations import pgettext
 
 
 class MIO3BONE_PG_PrefixItem(PropertyGroup):
-    prefix: StringProperty(name="Prefix")
+    prefix: StringProperty(name="プレフィックス")
 
 
 class MIO3BONE_PG_PrefixList(PropertyGroup):
@@ -22,42 +21,21 @@ class MIO3BONE_PG_PrefixList(PropertyGroup):
 
 
 class MIO3BONE_Props(PropertyGroup):
-    side_long: BoolProperty(name="Side Long", default=False)
-    remove_prefix: BoolProperty(name="Remove", default=False)
-    prefixs: PointerProperty(name="Prefix", type=MIO3BONE_PG_PrefixList)
-    input_prefix: StringProperty(name="Prefix", default="Twist_")
+    remove_prefix: BoolProperty(name="プレフィックスを削除", default=False)
+    prefix_list: PointerProperty(name="プレフィックス", type=MIO3BONE_PG_PrefixList)
+    input_prefix: StringProperty(name="プレフィックス", default="Twist_")
     convert_types: EnumProperty(
         name="After Format",
         description="",
         items=[
             (
                 "UpperArm_L",
-                "UpperArm_L (オススメ)",
-                "",
-            ),
-            (
-                "Upper Arm_L",
-                "Upper Arm_L",
-                "",
-            ),
-            (
-                "Upper_Arm_L",
-                "Upper_Arm_L",
+                "UpperArm_L (推奨)",
                 "",
             ),
             (
                 "UpperArm.L",
                 "UpperArm.L",
-                "",
-            ),
-            (
-                "Upper Arm.L",
-                "Upper Arm.L",
-                "",
-            ),
-            (
-                "Upper_Arm.L",
-                "Upper_Arm.L",
                 "",
             ),
         ],
@@ -67,7 +45,7 @@ class MIO3BONE_Props(PropertyGroup):
 
 class MIO3BONE_OT_ConvertNames(Operator):
     bl_idname = "armature.convert_bone_names"
-    bl_label = "Convert Bone Names"
+    bl_label = "ボーン名を変換"
     bl_description = "ポーズモードで表示されているボーンの名前を変換します"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -198,21 +176,17 @@ class MIO3BONE_OT_ConvertNames(Operator):
 
         props = context.scene.mio3bone
         convert_type = props.convert_types
-        prefixs = [item.prefix for item in context.scene.mio3bone.prefixs.items]
+        prefix_list = [item.prefix for item in context.scene.mio3bone.prefix_list.items]
 
         for bone in armature.pose.bones:
             if not bone.bone.hide:
                 prefix, name, side, number = self.detect_name_component(
-                    bone.name, prefixs
+                    bone.name, prefix_list
                 )
                 if context.scene.mio3bone.remove_prefix:
                     prefix = ""
 
-                if context.scene.mio3bone.side_long:
-                    side = "Left" if side == "L" else side
-                    side = "Right" if side == "R" else side
-                else:
-                    side = side[0] if side in ["Left", "Right"] else side
+                side = side[0] if side in ["Left", "Right"] else side
 
                 name = self.convert_name(name, convert_type)
                 new_name = self.join_name_component(
@@ -231,7 +205,7 @@ class MIO3BONE_OT_PrefixAdd(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        list = context.scene.mio3bone.prefixs
+        list = context.scene.mio3bone.prefix_list
         input_prefix = context.scene.mio3bone.input_prefix
         new_item = list.items.add()
         new_item.prefix = input_prefix
@@ -244,7 +218,7 @@ class MIO3BONE_OT_PrefixRemove(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        list = context.scene.mio3bone.prefixs
+        list = context.scene.mio3bone.prefix_list
         list.items.remove(list.active_index)
         list.active_index = min(max(0, list.active_index - 1), len(list.items) - 1)
         return {"FINISHED"}
@@ -261,25 +235,25 @@ class MIO3BONE_PT_Convert(Panel):
     def draw(self, context):
         layout = self.layout
         props = context.scene.mio3bone
-        layout.label(text="Name Converter")
         layout.prop(props, "convert_types")
-        layout.operator("armature.convert_bone_names", text="Convert")
+        layout.operator("armature.convert_bone_names")
 
-        layout.label(text="カスタムプレフィックス")
+        box = layout.box()
+        box.label(text="カスタムプレフィックス")
 
-        prefixs = context.scene.mio3bone.prefixs
-        row = layout.row(align=True)
+        prefix_list = context.scene.mio3bone.prefix_list
+        row = box.row(align=True)
         row.label(text="Prefix")
         row.scale_x = 2
         row.prop(context.scene.mio3bone, "input_prefix", text="")
 
-        row = layout.row()
+        row = box.row()
         row.template_list(
             "MIO3BONE_UL_PrefixList",
-            "prefixs",
-            prefixs,
+            "prefix_list",
+            prefix_list,
             "items",
-            prefixs,
+            prefix_list,
             "active_index",
             rows=3,
         )
@@ -288,8 +262,7 @@ class MIO3BONE_PT_Convert(Panel):
         col.operator(MIO3BONE_OT_PrefixAdd.bl_idname, icon="ADD", text="")
         col.operator(MIO3BONE_OT_PrefixRemove.bl_idname, icon="REMOVE", text="")
 
-        layout.row().prop(context.scene.mio3bone, "remove_prefix", text="Remove Prefix")
-        layout.row().prop(context.scene.mio3bone, "side_long", text="L/R -> Left/Right")
+        box.prop(context.scene.mio3bone, "remove_prefix")
 
 
 class MIO3BONE_UL_PrefixList(bpy.types.UIList):
@@ -297,7 +270,7 @@ class MIO3BONE_UL_PrefixList(bpy.types.UIList):
         self, context, layout, data, item, icon, active_data, active_propname, index
     ):
         row = layout.row(align=True)
-        row.label(text=f"{item.prefix}", icon="PINNED")
+        row.label(text=item.prefix, icon="PINNED")
 
 
 classes = (
