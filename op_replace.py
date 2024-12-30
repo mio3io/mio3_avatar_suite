@@ -79,7 +79,7 @@ class MIO3BONE_PT_ConvertByPreset(Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Mio3"
-    bl_label = "Preset Convert"
+    bl_label = "プリセット変換"
     bl_parent_id = "MIO3BONE_PT_Main"
     bl_options = {"DEFAULT_CLOSED"}
 

@@ -12,17 +12,14 @@ from bpy.types import Operator, Panel, PropertyGroup
 
 
 class MIO3BONE_PG_PrefixItem(PropertyGroup):
-    prefix: StringProperty(name="プレフィックス")
+    name: StringProperty(name="プレフィックス")
 
 
-class MIO3BONE_PG_PrefixList(PropertyGroup):
-    items: CollectionProperty(name="items", type=MIO3BONE_PG_PrefixItem)
+class MIO3BONE_PG_Main(PropertyGroup):
+    show_prefix: BoolProperty(name="カスタムプレフィックス")
+    prefix_list: CollectionProperty(name="List", type=MIO3BONE_PG_PrefixItem)
     active_index: IntProperty()
-
-
-class MIO3BONE_Props(PropertyGroup):
     remove_prefix: BoolProperty(name="プレフィックスを削除", default=False)
-    prefix_list: PointerProperty(name="プレフィックス", type=MIO3BONE_PG_PrefixList)
     input_prefix: StringProperty(name="プレフィックス", default="Twist_")
     convert_types: EnumProperty(
         name="After Format",
@@ -142,13 +139,9 @@ class MIO3BONE_OT_ConvertNames(Operator):
         if side == "":
             return "".join([name, number])
         elif self.conventions[convert_type]["side_type"] == "suffix":
-            newstr = "".join(
-                [prefix, name, conv_data["side_format"].format(side), number]
-            )
+            newstr = "".join([prefix, name, conv_data["side_format"].format(side), number])
         else:
-            newstr = "".join(
-                [prefix, conv_data["side_format"].format(side), name, number]
-            )
+            newstr = "".join([prefix, conv_data["side_format"].format(side), name, number])
         return newstr
 
     def convert_name(self, name, to_conv):
@@ -176,22 +169,18 @@ class MIO3BONE_OT_ConvertNames(Operator):
 
         props = context.scene.mio3bone
         convert_type = props.convert_types
-        prefix_list = [item.prefix for item in context.scene.mio3bone.prefix_list.items]
+        prefix_list = [item.name for item in context.scene.mio3bone.prefix_list]
 
         for bone in armature.pose.bones:
             if not bone.bone.hide:
-                prefix, name, side, number = self.detect_name_component(
-                    bone.name, prefix_list
-                )
+                prefix, name, side, number = self.detect_name_component(bone.name, prefix_list)
                 if context.scene.mio3bone.remove_prefix:
                     prefix = ""
 
                 side = side[0] if side in ["Left", "Right"] else side
 
                 name = self.convert_name(name, convert_type)
-                new_name = self.join_name_component(
-                    prefix, name, side, number, convert_type
-                )
+                new_name = self.join_name_component(prefix, name, side, number, convert_type)
                 if new_name != bone.name:
                     bone.name = new_name
 
@@ -205,10 +194,12 @@ class MIO3BONE_OT_PrefixAdd(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        list = context.scene.mio3bone.prefix_list
-        input_prefix = context.scene.mio3bone.input_prefix
-        new_item = list.items.add()
-        new_item.prefix = input_prefix
+        mio3bone = context.scene.mio3bone
+
+        prefix_list = mio3bone.prefix_list
+        input_prefix = mio3bone.input_prefix
+        new_item = prefix_list.add()
+        new_item.name = input_prefix
         return {"FINISHED"}
 
 
@@ -218,9 +209,11 @@ class MIO3BONE_OT_PrefixRemove(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        list = context.scene.mio3bone.prefix_list
-        list.items.remove(list.active_index)
-        list.active_index = min(max(0, list.active_index - 1), len(list.items) - 1)
+        mio3bone = context.scene.mio3bone
+
+        prefix_list = mio3bone.prefix_list
+        prefix_list.remove(mio3bone.active_index)
+        mio3bone.active_index = min(max(0, mio3bone.active_index - 1), len(prefix_list) - 1)
         return {"FINISHED"}
 
 
@@ -228,7 +221,7 @@ class MIO3BONE_PT_Convert(Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Mio3"
-    bl_label = "Format Convert"
+    bl_label = "フォーマット変換"
     bl_parent_id = "MIO3BONE_PT_Main"
     bl_options = {"DEFAULT_CLOSED"}
 
@@ -239,44 +232,44 @@ class MIO3BONE_PT_Convert(Panel):
         layout.operator("armature.convert_bone_names")
 
         box = layout.box()
-        box.label(text="カスタムプレフィックス")
-
-        prefix_list = context.scene.mio3bone.prefix_list
-        row = box.row(align=True)
-        row.label(text="Prefix")
-        row.scale_x = 2
-        row.prop(context.scene.mio3bone, "input_prefix", text="")
-
+        icon = "TRIA_DOWN" if props.show_prefix else "TRIA_RIGHT"
         row = box.row()
-        row.template_list(
-            "MIO3BONE_UL_PrefixList",
-            "prefix_list",
-            prefix_list,
-            "items",
-            prefix_list,
-            "active_index",
-            rows=3,
-        )
+        row.alignment = "LEFT"
+        row.prop(props, "show_prefix", toggle=True, emboss=False, icon=icon)
 
-        col = row.column(align=True)
-        col.operator(MIO3BONE_OT_PrefixAdd.bl_idname, icon="ADD", text="")
-        col.operator(MIO3BONE_OT_PrefixRemove.bl_idname, icon="REMOVE", text="")
+        if props.show_prefix:
 
-        box.prop(context.scene.mio3bone, "remove_prefix")
+            row = box.row(align=True)
+            row.label(text="Prefix")
+            row.scale_x = 2
+            row.prop(context.scene.mio3bone, "input_prefix", text="")
+
+            row = box.row()
+            row.template_list(
+                "MIO3BONE_UL_PrefixList",
+                "prefix_list",
+                context.scene.mio3bone,
+                "prefix_list",
+                context.scene.mio3bone,
+                "active_index",
+                rows=3,
+            )
+
+            col = row.column(align=True)
+            col.operator("mio3bone.prefix_add", icon="ADD", text="")
+            col.operator("mio3bone.prefix_remove", icon="REMOVE", text="")
+            box.prop(context.scene.mio3bone, "remove_prefix")
 
 
 class MIO3BONE_UL_PrefixList(bpy.types.UIList):
-    def draw_item(
-        self, context, layout, data, item, icon, active_data, active_propname, index
-    ):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         row = layout.row(align=True)
-        row.label(text=item.prefix, icon="PINNED")
+        row.prop(item, "name", icon="PINNED", text="", emboss=False)
 
 
 classes = (
     MIO3BONE_PG_PrefixItem,
-    MIO3BONE_PG_PrefixList,
-    MIO3BONE_Props,
+    MIO3BONE_PG_Main,
     MIO3BONE_OT_ConvertNames,
     MIO3BONE_OT_PrefixAdd,
     MIO3BONE_OT_PrefixRemove,
@@ -288,7 +281,7 @@ classes = (
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-    bpy.types.Scene.mio3bone = PointerProperty(type=MIO3BONE_Props)
+    bpy.types.Scene.mio3bone = PointerProperty(type=MIO3BONE_PG_Main)
 
 
 def unregister():
