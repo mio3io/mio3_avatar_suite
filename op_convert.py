@@ -83,23 +83,23 @@ class MIO3BONE_OT_ConvertNames(Operator):
 
     patterns = (
         {
-            "pattern": r"(.+)[\._](L|R|Left|Right)(?:(\.\w+))?$",
+            "pattern": r"(.+)[\._](L|R|Left|Right)(?:(\.\d+(?:_end|\.end)?))?$",
             "side_type": "suffix",
         },
         {
-            "pattern": r"^(L|R|Left|Right)[\._](.+)(?:(\.\w+))?$",
+            "pattern": r"^(L|R|Left|Right)[\._](.+)(?:(\.\d+(?:_end|\.end)?))?$",
             "side_type": "prefix",
         },
         {
-            "pattern": r"(.+)(Left|Right)(?:(\.\w+))?$",
+            "pattern": r"(.+)(Left|Right)(?:(\.\d+(?:_end|\.end)?))?$",
             "side_type": "suffix",
         },
         {
-            "pattern": r"^(Left|Right)([^a-z].*)(?:(\.\w+))?$",
+            "pattern": r"^(Left|Right)([^a-z].*)(?:(\.\d+(?:_end|\.end)?))?$",
             "side_type": "prefix",
         },
         {
-            "pattern": r"(.+?)(?:(\.\d+))?$",
+            "pattern": r"(.+?)(?:(\.\d+(?:_end|\.end)?))?$",
             "side_type": "none",
         },
     )
