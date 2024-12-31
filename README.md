@@ -5,7 +5,9 @@
 ## 導入方法
 
 [Code > Download ZIP](https://github.com/mio3io/Mio3Bones/archive/master.zip) から ZIP ファイルをダウンロードします。
-Blender の `Edit > Preferences > Addons > Install` を開き、ダウンロードしたアドオンの ZIP ファイルを選択してインストールボタンを押します。インストール後、該当するアドオンの左側についているチェックボックスを ON にします。
+
+Blender の `編集 > プリファレンス > アドオン > 右上の▼ > ディスクからインストール` を開き、ダウンロードしたアドオンの ZIP ファイルを選択してインストールボタンを押します。インストール後、該当するアドオンの左側についているチェックボックスを ON にします。
+
 
 ## 機能
 
