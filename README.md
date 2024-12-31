@@ -48,6 +48,10 @@ Blender の `Edit > Preferences > Addons > Install` を開き、ダウンロー�
 -   HairFront_L.001
 -   (CustomPrefix\_)Arm_L
 
+カスタムプレフィックス
+
+-   IK_UpperArm_L を IK_UpperArm.L のように変換したい場合は、カスタムプレフィックスに「IK_」を登録するとそのまま使用されます。また、不要なプレフィックスを削除することもできます。
+
 <!--
 おそらく期待どおりに変換されないパターン
 
