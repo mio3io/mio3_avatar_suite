@@ -3,8 +3,7 @@ import os
 import csv
 from bpy_extras.io_utils import ImportHelper
 from bpy.types import Operator, Panel
-
-TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
+from ..define import TEMPLATE_DIR
 
 
 class MIO3BONE_OT_ConvertByPreset(Operator):
