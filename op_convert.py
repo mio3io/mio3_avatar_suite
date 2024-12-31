@@ -18,7 +18,7 @@ class MIO3BONE_PG_PrefixItem(PropertyGroup):
 class MIO3BONE_PG_Main(PropertyGroup):
     show_prefix: BoolProperty(name="カスタムプレフィックス")
     prefix_list: CollectionProperty(name="List", type=MIO3BONE_PG_PrefixItem)
-    active_index: IntProperty()
+    prefix_active_index: IntProperty()
     remove_prefix: BoolProperty(name="プレフィックスを削除", default=False)
     input_prefix: StringProperty(name="プレフィックス", default="Twist_")
     convert_types: EnumProperty(
@@ -82,24 +82,24 @@ class MIO3BONE_OT_ConvertNames(Operator):
     }
 
     patterns = (
-        {
-            "pattern": r"(.+)[\._](L|R|Left|Right)(?:(\.\d+(?:_end|\.end)?))?$",
+        {  # _L とか
+            "pattern": r"(.+)[\._](L|R|Left|Right)(?:([._]\d*(?:_end|\.end|end)?))?$",
             "side_type": "suffix",
         },
-        {
-            "pattern": r"^(L|R|Left|Right)[\._](.+)(?:(\.\d+(?:_end|\.end)?))?$",
+        {  # L_ とか
+            "pattern": r"^(L|R|Left|Right)[\._](.+)(?:([._]\d*(?:_end|\.end|end)?))?$",
             "side_type": "prefix",
         },
-        {
-            "pattern": r"(.+)(Left|Right)(?:(\.\d+(?:_end|\.end)?))?$",
+        {  # UpperArmLeft とか
+            "pattern": r"(.+)(Left|Right)(?:([._]\d*(?:_end|\.end|end)?))?$",
             "side_type": "suffix",
         },
-        {
-            "pattern": r"^(Left|Right)([^a-z].*)(?:(\.\d+(?:_end|\.end)?))?$",
+        {  # LeftUpperArm とか
+            "pattern": r"^(Left|Right)([^a-z].*)(?:([._]\d*(?:_end|\.end|end)?))?$",
             "side_type": "prefix",
         },
-        {
-            "pattern": r"(.+?)(?:(\.\d+(?:_end|\.end)?))?$",
+        {  # 左右なし
+            "pattern": r"(.+?)(?:([._]\d*(?:_end|\.end|end)?))?$",
             "side_type": "none",
         },
     )
@@ -204,8 +204,8 @@ class MIO3BONE_OT_PrefixRemove(bpy.types.Operator):
         mio3bone = context.scene.mio3bone
 
         prefix_list = mio3bone.prefix_list
-        prefix_list.remove(mio3bone.active_index)
-        mio3bone.active_index = min(max(0, mio3bone.active_index - 1), len(prefix_list) - 1)
+        prefix_list.remove(mio3bone.prefix_active_index)
+        mio3bone.prefix_active_index = min(max(0, mio3bone.prefix_active_index - 1), len(prefix_list) - 1)
         return {"FINISHED"}
 
 
@@ -243,7 +243,7 @@ class MIO3BONE_PT_Convert(Panel):
                 context.scene.mio3bone,
                 "prefix_list",
                 context.scene.mio3bone,
-                "active_index",
+                "prefix_active_index",
                 rows=3,
             )
 
