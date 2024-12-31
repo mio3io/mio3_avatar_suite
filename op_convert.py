@@ -25,16 +25,8 @@ class MIO3BONE_PG_Main(PropertyGroup):
         name="After Format",
         description="",
         items=[
-            (
-                "UpperArm_L",
-                "UpperArm_L (推奨)",
-                "",
-            ),
-            (
-                "UpperArm.L",
-                "UpperArm.L",
-                "",
-            ),
+            ("UpperArm_L", "UpperArm_L (推奨)", ""),
+            ("UpperArm.L", "UpperArm.L", ""),
         ],
         default="UpperArm_L",
     )
@@ -91,19 +83,19 @@ class MIO3BONE_OT_ConvertNames(Operator):
 
     patterns = (
         {
-            "pattern": r"(.+)[\._](L|R|Left|Right)(?:(\.\d+))?$",
+            "pattern": r"(.+)[\._](L|R|Left|Right)(?:(\.\w+))?$",
             "side_type": "suffix",
         },
         {
-            "pattern": r"^(L|R|Left|Right)[\._](.+)(?:(\.\d+))?$",
+            "pattern": r"^(L|R|Left|Right)[\._](.+)(?:(\.\w+))?$",
             "side_type": "prefix",
         },
         {
-            "pattern": r"(.+)(Left|Right)(?:(\.\d+))?$",
+            "pattern": r"(.+)(Left|Right)(?:(\.\w+))?$",
             "side_type": "suffix",
         },
         {
-            "pattern": r"^(Left|Right)([^a-z].*)(?:(\.\d+))?$",
+            "pattern": r"^(Left|Right)([^a-z].*)(?:(\.\w+))?$",
             "side_type": "prefix",
         },
         {
@@ -119,8 +111,8 @@ class MIO3BONE_OT_ConvertNames(Operator):
             if bone_name.startswith(p):
                 prefix = p
                 base = bone_name[len(p) :]
-        name, side, number = self.detect_pattern(base)
-        return prefix, name, side, number
+        name, side, ext = self.detect_pattern(base)
+        return prefix, name, side, ext
 
     def detect_pattern(self, name):
         for data in self.patterns:
@@ -173,14 +165,14 @@ class MIO3BONE_OT_ConvertNames(Operator):
 
         for bone in armature.pose.bones:
             if not bone.bone.hide:
-                prefix, name, side, number = self.detect_name_component(bone.name, prefix_list)
+                prefix, name, side, ext = self.detect_name_component(bone.name, prefix_list)
                 if context.scene.mio3bone.remove_prefix:
                     prefix = ""
 
                 side = side[0] if side in ["Left", "Right"] else side
 
                 name = self.convert_name(name, convert_type)
-                new_name = self.join_name_component(prefix, name, side, number, convert_type)
+                new_name = self.join_name_component(prefix, name, side, ext, convert_type)
                 if new_name != bone.name:
                     bone.name = new_name
 
