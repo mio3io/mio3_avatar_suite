@@ -1,35 +1,6 @@
 import bpy
 import re
-from bpy.props import (
-    BoolProperty,
-    IntProperty,
-    StringProperty,
-    EnumProperty,
-    PointerProperty,
-    CollectionProperty,
-)
-from bpy.types import Operator, Panel, PropertyGroup
-
-
-class MIO3BONE_PG_PrefixItem(PropertyGroup):
-    name: StringProperty(name="プレフィックス")
-
-
-class MIO3BONE_PG_Main(PropertyGroup):
-    show_prefix: BoolProperty(name="カスタムプレフィックス")
-    prefix_list: CollectionProperty(name="List", type=MIO3BONE_PG_PrefixItem)
-    prefix_active_index: IntProperty()
-    remove_prefix: BoolProperty(name="プレフィックスを削除", default=False)
-    input_prefix: StringProperty(name="プレフィックス", default="Twist_")
-    convert_types: EnumProperty(
-        name="After Format",
-        description="",
-        items=[
-            ("UpperArm_L", "UpperArm_L (推奨)", ""),
-            ("UpperArm.L", "UpperArm.L", ""),
-        ],
-        default="UpperArm_L",
-    )
+from bpy.types import Operator, Panel
 
 
 class MIO3BONE_OT_ConvertNames(Operator):
@@ -260,8 +231,6 @@ class MIO3BONE_UL_PrefixList(bpy.types.UIList):
 
 
 classes = (
-    MIO3BONE_PG_PrefixItem,
-    MIO3BONE_PG_Main,
     MIO3BONE_OT_ConvertNames,
     MIO3BONE_OT_PrefixAdd,
     MIO3BONE_OT_PrefixRemove,
@@ -273,10 +242,8 @@ classes = (
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-    bpy.types.Scene.mio3bone = PointerProperty(type=MIO3BONE_PG_Main)
 
 
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
-    del bpy.types.Scene.mio3bone

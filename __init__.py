@@ -1,9 +1,17 @@
 import bpy
-from bpy.types import Operator, Panel
-from bpy.props import EnumProperty, BoolProperty
+from bpy.types import Operator, Panel, PropertyGroup
+from bpy.props import (
+    BoolProperty,
+    IntProperty,
+    StringProperty,
+    EnumProperty,
+    PointerProperty,
+    CollectionProperty,
+)
 from bpy.app.translations import pgettext
 from . import op_convert
-from . import op_replace
+from . import op_convert_preset
+
 
 bl_info = {
     "name": "Mio3 Bones",
@@ -18,9 +26,7 @@ bl_info = {
 
 def select_current_selection(armature):
     current_selection = [
-        (bone.name, bone.select_head, bone.select_tail)
-        for bone in armature.edit_bones
-        if bone.select
+        (bone.name, bone.select_head, bone.select_tail) for bone in armature.edit_bones if bone.select
     ]
     if armature.use_mirror_x:
         bpy.ops.armature.select_mirror(extend=True)
@@ -78,9 +84,7 @@ class MIO3_OT_bone_evenly(Operator):
     def evenly(self, chain, iterations=3):
         original_positions = [(bone.head.copy(), bone.tail.copy()) for bone in chain]
         for _ in range(iterations):
-            total_length = sum(
-                (tail - head).length for head, tail in original_positions
-            )
+            total_length = sum((tail - head).length for head, tail in original_positions)
             equal_length = total_length / len(chain)
 
             sum_distances = [0.0]
@@ -92,12 +96,8 @@ class MIO3_OT_bone_evenly(Operator):
             def interpolate_position(distance):
                 for i in range(len(sum_distances) - 1):
                     if sum_distances[i] <= distance <= sum_distances[i + 1]:
-                        t = (distance - sum_distances[i]) / (
-                            sum_distances[i + 1] - sum_distances[i]
-                        )
-                        return original_positions[i][0].lerp(
-                            original_positions[i][1], t
-                        )
+                        t = (distance - sum_distances[i]) / (sum_distances[i + 1] - sum_distances[i])
+                        return original_positions[i][0].lerp(original_positions[i][1], t)
                 return original_positions[-1][1]
 
             chain[0].head = original_positions[0][0]
@@ -147,9 +147,7 @@ class MIO3_OT_bone_align(Operator):
                 bone.head = positions[i]
                 bone.tail = positions[i + 1]
         else:
-            length_ratios = [
-                bone.length / sum(bone.length for bone in chain) for bone in chain
-            ]
+            length_ratios = [bone.length / sum(bone.length for bone in chain) for bone in chain]
             current_length = 0
             for i, bone in enumerate(chain):
                 bone_length = total_distance * length_ratios[i]
@@ -220,9 +218,7 @@ class MIO3_OT_bone_numbering(Operator):
             bone.name = temp_name
 
         for i, bone in enumerate(sorted_bones):
-            original_name = list(temp_names.keys())[
-                list(temp_names.values()).index(bone.name)
-            ]
+            original_name = list(temp_names.keys())[list(temp_names.values()).index(bone.name)]
             if original_name != name:
                 if self.endbone and i == len(sorted_bones) - 1:
                     bone.name = f"{base_name}{self.delim}end{suffix}"
@@ -239,19 +235,13 @@ def menu(self, context):
 
 def menu_transform(self, context):
     self.layout.separator()
-    self.layout.operator(
-        MIO3_OT_bone_align.bl_idname, text=pgettext(MIO3_OT_bone_align.bl_label)
-    )
-    self.layout.operator(
-        MIO3_OT_bone_evenly.bl_idname, text=pgettext(MIO3_OT_bone_evenly.bl_label)
-    )
+    self.layout.operator(MIO3_OT_bone_align.bl_idname, text=pgettext(MIO3_OT_bone_align.bl_label))
+    self.layout.operator(MIO3_OT_bone_evenly.bl_idname, text=pgettext(MIO3_OT_bone_evenly.bl_label))
 
 
 def menu_name(self, context):
     self.layout.separator()
-    self.layout.operator(
-        MIO3_OT_bone_numbering.bl_idname, text=pgettext(MIO3_OT_bone_numbering.bl_label)
-    )
+    self.layout.operator(MIO3_OT_bone_numbering.bl_idname, text=pgettext(MIO3_OT_bone_numbering.bl_label))
 
 
 translation_dict = {
@@ -264,11 +254,10 @@ translation_dict = {
         ("*", "Numbering Bones"): "ボーンに通し番号をふる",
         ("*", "Unify roles"): "ロールを統一",
         ("*", "Preserve Length Bone"): "各ボーンの長さを維持",
-
         ("*", "After Format"): "変換後",
-
     }
 }
+
 
 class MIO3BONE_PT_Main(Panel):
     bl_space_type = "VIEW_3D"
@@ -280,7 +269,36 @@ class MIO3BONE_PT_Main(Panel):
         layout = self.layout
 
 
-classes = [MIO3_OT_bone_evenly, MIO3_OT_bone_align, MIO3_OT_bone_numbering, MIO3BONE_PT_Main]
+class MIO3BONE_PG_PrefixItem(PropertyGroup):
+    name: StringProperty(name="プレフィックス")
+
+
+class MIO3BONE_PG_Main(PropertyGroup):
+    show_prefix: BoolProperty(name="カスタムプレフィックス")
+    prefix_list: CollectionProperty(name="List", type=MIO3BONE_PG_PrefixItem)
+    prefix_active_index: IntProperty()
+    remove_prefix: BoolProperty(name="プレフィックスを削除", default=False)
+    input_prefix: StringProperty(name="プレフィックス", default="Twist_")
+    convert_types: EnumProperty(
+        name="After Format",
+        description="",
+        items=[
+            ("UpperArm_L", "UpperArm_L (推奨)", ""),
+            ("UpperArm.L", "UpperArm.L", ""),
+        ],
+        default="UpperArm_L",
+    )
+    preset_reverse: BoolProperty(name="変換を反転")
+
+
+classes = [
+    MIO3BONE_PG_PrefixItem,
+    MIO3BONE_PG_Main,
+    MIO3_OT_bone_evenly,
+    MIO3_OT_bone_align,
+    MIO3_OT_bone_numbering,
+    MIO3BONE_PT_Main,
+]
 
 
 def register():
@@ -288,21 +306,23 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
     op_convert.register()
-    op_replace.register()
+    op_convert_preset.register()
     bpy.types.VIEW3D_MT_transform_armature.append(menu_transform)
     bpy.types.VIEW3D_MT_edit_armature_names.append(menu_name)
     bpy.types.VIEW3D_MT_armature_context_menu.append(menu)
+    bpy.types.Scene.mio3bone = PointerProperty(type=MIO3BONE_PG_Main)
 
 
 def unregister():
+    bpy.app.translations.unregister(__name__)
     for cls in classes:
         bpy.utils.unregister_class(cls)
     op_convert.unregister()
-    op_replace.unregister()
+    op_convert_preset.unregister()
     bpy.types.VIEW3D_MT_transform_armature.remove(menu_transform)
     bpy.types.VIEW3D_MT_edit_armature_names.remove(menu_name)
     bpy.types.VIEW3D_MT_armature_context_menu.remove(menu)
-    bpy.app.translations.unregister(__name__)
+    del bpy.types.Scene.mio3bone
 
 
 if __name__ == "__main__":

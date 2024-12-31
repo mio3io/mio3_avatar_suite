@@ -39,12 +39,12 @@ class MIO3BONE_OT_ConvertByPreset(Operator):
             bone_pairs = list(reader)
 
         for pair in bone_pairs:
-            if self.reversed:
+            if context.scene.mio3bone.preset_reverse:
                 rename(pair[0], pair[1], context)
             else:
                 rename(pair[1], pair[0], context)
 
-        if self.full_convert and self.type == "VROID_HUMANOID" and not self.reversed:
+        if self.full_convert and self.type == "VROID_HUMANOID" and not context.scene.mio3bone.preset_reverse:
             armature = context.active_object
             for bone in armature.pose.bones:
                 original_name = bone.name
@@ -85,12 +85,9 @@ class MIO3BONE_PT_ConvertByPreset(Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.operator("mio3bone.convert_preset", text="VRoid → UpperArm_L").type = (
-            "VROID_HUMANOID"
-        )
-        layout.operator("mio3bone.convert_preset", text="MMD → UpperArm_L").type = (
-            "MMD_HUMANOID"
-        )
+        layout.operator("mio3bone.convert_preset", text="VRoid → UpperArm_L").type = "VROID_HUMANOID"
+        layout.operator("mio3bone.convert_preset", text="MMD → UpperArm_L").type = "MMD_HUMANOID"
+        layout.prop(context.scene.mio3bone, "preset_reverse")
 
 
 classes = [MIO3BONE_OT_ConvertByPreset, MIO3BONE_PT_ConvertByPreset]
