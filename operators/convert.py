@@ -75,10 +75,10 @@ class MIO3BONE_OT_ConvertNames(Operator):
         },
     )
 
-    def detect_name_component(self, bone_name, prefixes):
+    def detect_name_component(self, bone_name, prefix_list):
         prefix = ""
         base = bone_name
-        for p in prefixes:
+        for p in prefix_list:
             if bone_name.startswith(p):
                 prefix = p
                 base = bone_name[len(p) :]
@@ -100,7 +100,7 @@ class MIO3BONE_OT_ConvertNames(Operator):
     def join_name_component(self, prefix, name, side, number, convert_type):
         conv_data = self.conventions[convert_type]
         if side == "":
-            return "".join([name, number])
+            return "".join([prefix, name, number])
         elif self.conventions[convert_type]["side_type"] == "suffix":
             newstr = "".join([prefix, name, conv_data["side_format"].format(side), number])
         else:
