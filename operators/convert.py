@@ -54,23 +54,23 @@ class MIO3BONE_OT_ConvertNames(Operator):
 
     patterns = (
         {  # _L とか
-            "pattern": r"(.+)[\._](L|R|Left|Right)(?:([._]\d*(?:_end|\.end|end)?))?$",
+            "pattern": r"(.+)[._](L|R|Left|Right)([._]\d*(?:_end|\.end|end)?)?$",
             "side_type": "suffix",
         },
         {  # L_ とか
-            "pattern": r"^(L|R|Left|Right)[\._](.+)(?:([._]\d*(?:_end|\.end|end)?))?$",
+            "pattern": r"^(L|R|Left|Right)[._](.+)([._]\d*(?:_end|\.end|end)?)?$",
             "side_type": "prefix",
         },
         {  # UpperArmLeft とか
-            "pattern": r"(.+)(Left|Right)(?:([._]\d*(?:_end|\.end|end)?))?$",
+            "pattern": r"(.+)(Left|Right)([._]\d*(?:_end|\.end|end)?)?$",
             "side_type": "suffix",
         },
         {  # LeftUpperArm とか
-            "pattern": r"^(Left|Right)([^a-z].*)(?:([._]\d*(?:_end|\.end|end)?))?$",
+            "pattern": r"^(Left|Right)([^a-z].*)([._]\d*(?:_end|\.end|end)?)?$",
             "side_type": "prefix",
         },
         {  # 左右なし
-            "pattern": r"(.+?)(?:([._]\d*(?:_end|\.end|end)?))?$",
+            "pattern": r"(.+?)([._]\d*(?:_end|\.end|end)?)?$",
             "side_type": "none",
         },
     )
@@ -109,7 +109,7 @@ class MIO3BONE_OT_ConvertNames(Operator):
 
     def convert_name(self, name, to_conv):
         if re.match(r"^[a-zA-Z0-9\s_.\-]+$", name):
-            words = re.findall(r"[A-Z][a-z]*|[a-z]+", name)
+            words = re.findall(r"[A-Z][a-z0-9]*|[a-z0-9]+", name)
         else:
             words = [name]
         separator = self.conventions[to_conv]["separator"]
