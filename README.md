@@ -41,18 +41,15 @@ VRChat用の Humanoid アーマチュアを追加しまう
 
 -   UpperArm_L
 -   Upper Arm_L
--   Upper_Arm_L
 -   UpperArm.L
 -   Upper Arm.L
--   Upper_Arm.L
 -   L_UpperArm
 -   LeftUpperArm
 -   UpperArmLeft
--   Hair
--   HairFront.001
--   HairFront.end
--   HairFront_L.001
--   (CustomPrefix\_)Arm_L
+-   Skirt
+-   SkirtFront2.001
+-   SkirtSide2.L.001_end
+-   (CustomPrefix)Arm_L
 
 カスタムプレフィックス
 
