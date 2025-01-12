@@ -1,10 +1,10 @@
-# Mio3 Avatar Utils
+# Mio3 Avatar Suite
 
-アバター編集用のサポートツール「Mio3 Bones」から名前を変更してアバター編集まわりの統合ツールになる予定。現在の名前は暫定です。
+アバター編集用のサポートツール「Mio3 Bones」から名前を変更してアバター編集まわりの統合ツールになる予定。
 
 ## 導入方法
 
-[Code > Download ZIP](https://github.com/mio3io/mio3_avatar_utils/archive/master.zip) から ZIP ファイルをダウンロードします。
+[Code > Download ZIP](https://github.com/mio3io/mio3_avatar_suite/archive/master.zip) から ZIP ファイルをダウンロードします。
 
 Blender の `編集 > プリファレンス > アドオン > 右上の▼ > ディスクからインストール` を開き、ダウンロードしたアドオンの ZIP ファイルを選択してインストールボタンを押します。インストール後、該当するアドオンの左側についているチェックボックスを ON にします。
 
